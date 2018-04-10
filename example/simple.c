@@ -7,6 +7,7 @@
  * A small example of jsmn parsing when JSON structure is known and number of
  * tokens is predictable.
  */
+#define DEBUG_MODE
 
 static const char *JSON_STRING =
 	"{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
@@ -28,6 +29,14 @@ int main() {
 
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
+
+	#ifdef DEBUG_MODE
+
+ printf("Token's count : %d \n",r);
+	#endif
+
+//디버그에요~
+
 	if (r < 0) {
 		printf("Failed to parse JSON: %d\n", r);
 		return 1;
