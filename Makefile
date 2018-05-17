@@ -28,7 +28,7 @@ jsmn_test.o: jsmn_test.c libjsmn.a
 simple_example: example/symple.o libjsmn.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
-myexample: example/myjson.o libjsmn.a
+myexample1: example/filesimple.o libjsmn.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
 jsondump: example/jsondump.o libjsmn.a
@@ -38,7 +38,7 @@ clean:
 	rm -f *.o example/*.o
 	rm -f *.a *.so
 	rm -f simple_example
-	rm -f myexample
+	rm -f myexample1
 	rm -f jsondump
 
 .PHONY: all clean test
