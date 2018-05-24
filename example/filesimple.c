@@ -44,6 +44,34 @@ printf("* * * * * NAME LIST * * * * * \n");
 		JSON_STR + t[a].start);
 	}
 }
+
+void selectNameList(char *JSON_STR , jsmntok_t *t , int *nameTokIndex){
+	int a;
+	int num;
+	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
+
+
+
+	while(1){
+		printf("Select Name's no (exit :0) >> ");
+		scanf("%d",&num);
+
+		if(num == 0) break; //exit 0
+		a = nameTokIndex[num];
+		if(a!=0){
+
+		printf("[NAME %d]: %.*s\n", num, t[a].end-t[a].start,
+		JSON_STR + t[a].start);
+
+		printf("%.*s \n", t[a+1].end-t[a+1].start,
+		JSON_STR + t[a+1].start);
+
+	}
+
+		else{ printf("Out of bound the Value !! please Enter num again \n ");
+		}
+	}
+}
 //name의 특징!
 // 1번특징 문자열로 되어있다.
 // 2번특징 parent 이다!
@@ -94,8 +122,8 @@ int main() {
 	r = jsmn_parse(&p, JSON_STR, strlen(JSON_STR), t, sizeof(t)/sizeof(t[0]));
 
 	jsonNameList(JSON_STR, t, r, nameTokIndexa);
-	printNameList(JSON_STR,t, nameTokIndexa);
-
+	//printNameList(JSON_STR,t, nameTokIndexa);
+	selectNameList(JSON_STR,t,nameTokIndexa);
 	return 0;
 
 	#ifdef DEBUG_MODE
