@@ -21,6 +21,46 @@ static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	return -1;
 }
 
+void jsonNameList(char *JSON_STR,jsmntok_t *t, int tokcount,int *nameTokIndex){
+
+	int count =1;
+ for(int i=1; i<tokcount;i++){
+	 if(t[i].size >=1 && t[i].type ==3){
+	 nameTokIndex[count]=i;
+	 i++;
+	 count ++;
+ 	}
+ }
+}
+
+void printNameList(char *JSON_STR, jsmntok_t *t,int *nameTokIndex){
+	int a;
+	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
+printf("* * * * * NAME LIST * * * * * \n");
+	for(;;i++){
+		a = nameTokIndex[i];
+		if(a ==0) break;
+		printf("[NAME %d]: %.*s\n", i, t[a].end-t[a].start,
+		JSON_STR + t[a].start);
+	}
+}
+//name의 특징!
+// 1번특징 문자열로 되어있다.
+// 2번특징 parent 이다!
+// 제일쉬운것 name다음 무조건 value
+/*void jsonNameList(char *JSON_STR, jsmntok_t *t, int tokcount){
+	printf("* * * * * NAME LIST * * * * * \n");
+ 	int count =1;
+	for (int i = 1; i < tokcount; i++) {
+		if(t[i].size >=1)//value가 있는경우. 즉 name인 경우
+		{
+			printf("[NAME %d ]: %.*s\n", count, t[i].end-t[i].start,
+					JSON_STR + t[i].start);
+					count++;
+					i++; //자식 skip.
+		}
+	}
+}*/
 char *readJSONFile() {
 	FILE *fp = fopen("data.json","r");
 	int count=0;
@@ -38,11 +78,12 @@ char *readJSONFile() {
 	}
 	fclose(fp);
 	return JSON_STRING;
-
 }
+
 int main() {
 	int i;
 	int r;
+	int nameTokIndexa[100]= {0};
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
 
@@ -52,7 +93,10 @@ int main() {
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STR, strlen(JSON_STR), t, sizeof(t)/sizeof(t[0]));
 
+	jsonNameList(JSON_STR, t, r, nameTokIndexa);
+	printNameList(JSON_STR,t, nameTokIndexa);
 
+	return 0;
 
 	#ifdef DEBUG_MODE
 
