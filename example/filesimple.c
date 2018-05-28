@@ -67,35 +67,55 @@ void selectNameList(char *JSON_STR , jsmntok_t *t , int *nameTokIndex){
 		}
 	}
 }
-void selectObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount,int tokcount){
-	int a;
-	int num;
-	int b;
+void selectObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount,int tokcount,int *nameTokIndex){
+int num=0;
+int a=0;
+int b=0;
+int z=0;
 	while(1){
 		printf("원하는 번호 입력 (exit :0) >> ");
 		scanf("%d",&num);
 
+		int i=1;
+
 		if(num == 0) break; //exit 0
+
 		a = objectCount[num];
 		b= objectCount[num+1];
-		if(a!=0){
+
+		if(a==0 ) printf("try again this num is out of bound! \n");
+
+		if(b==0){
 			printf("%.*s : ", t[a].end-t[a].start,
 			JSON_STR + t[a].start);
 			printf("%.*s \n", t[a+1].end-t[a+1].start,
 			JSON_STR + t[a+1].start);
-			a+=2;
+			a++;
 
-			while(a+1<b){
-				printf("        [%.*s]    ", t[a].end-t[a].start,
-				JSON_STR + t[a].start);
-
-				printf("%.*s \n", t[a+1].end-t[a+1].start,
-				JSON_STR + t[a+1].start);
-			a+=2;
+			for(;;i++){
+				z = nameTokIndex[a+i];
+				if(z == 0) break;
+				printf("      [%.*s]      ", t[z].end-t[z].start,
+				JSON_STR + t[z].start);
+				printf("%.*s \n", t[z+1].end-t[z+1].start,
+				JSON_STR + t[z+1].start);
+			}
 		}
-	}
 		else{
-			printf("Out of bound the Value !! please Enter num again \n ");
+			printf("%.*s : ", t[a].end-t[a].start,
+			JSON_STR + t[a].start);
+			printf("%.*s \n", t[a+1].end-t[a+1].start,
+			JSON_STR + t[a+1].start);
+			a++;
+
+			for(;;i++){
+				z = nameTokIndex[a+i];
+				if(z >= b) break;
+				printf("      [%.*s]      ", t[z].end-t[z].start,
+				JSON_STR + t[z].start);
+				printf("%.*s \n", t[z+1].end-t[z+1].start,
+				JSON_STR + t[z+1].start);
+			}
 		}
 	}
 }
@@ -109,14 +129,15 @@ void objectNameList(char *JSON_STR,jsmntok_t *t,int tokcount, int *objectCount ,
  	for(int i=1; i<tokcount;i++){
 	 	if(jsoneq(JSON_STR, &t[i], &t[a]) == 0){
 	 	objectCount[count]=i;
-	 	i++; count ++;
+	 	i++;
+		count ++;
  	}
  }
 }
 void PrintObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount){
 	int count =1;
 	int a;
-	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
+	int i = 1;
 printf("* * * * * OBJECT LIST * * * * * \n");
 	for(;;i++){
 		a = objectCount[i];
@@ -181,7 +202,7 @@ int main() {
 //	selectNameList(JSON_STR,t,nameTokIndexa);
 	objectNameList(JSON_STR, t, r, objectCount,nameTokIndexa);
 	PrintObjectList(JSON_STR,t, objectCount);
-	//selectObjectList(JSON_STR,t,objectCount,r);
+	selectObjectList(JSON_STR,t,objectCount,r,nameTokIndexa);
 	return 0;
 
 	#ifdef DEBUG_MODE
