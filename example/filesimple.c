@@ -13,9 +13,9 @@ static const char *JSON_STRING =
 	"{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
 	"\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
 
-static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+static int jsoneq(const char *json, jsmntok_t *tok, jsmntok_t *tok1) {
+	if (tok->type == JSMN_STRING && (int) tok1->end - tok1->start == tok->end - tok->start &&
+			strncmp(json + tok->start, json + tok1->start, tok->end - tok->start) == 0) {
 		return 0;
 	}
 	return -1;
@@ -48,9 +48,6 @@ printf("* * * * * NAME LIST * * * * * \n");
 void selectNameList(char *JSON_STR , jsmntok_t *t , int *nameTokIndex){
 	int a;
 	int num;
-	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
-
-
 
 	while(1){
 		printf("Select Name's no (exit :0) >> ");
@@ -65,11 +62,68 @@ void selectNameList(char *JSON_STR , jsmntok_t *t , int *nameTokIndex){
 
 		printf("%.*s \n", t[a+1].end-t[a+1].start,
 		JSON_STR + t[a+1].start);
-
 	}
-
 		else{ printf("Out of bound the Value !! please Enter num again \n ");
 		}
+	}
+}
+void selectObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount,int tokcount){
+	int a;
+	int num;
+	int b;
+	while(1){
+		printf("원하는 번호 입력 (exit :0) >> ");
+		scanf("%d",&num);
+
+		if(num == 0) break; //exit 0
+		a = objectCount[num];
+		b= objectCount[num+1];
+		if(a!=0){
+			printf("%.*s : ", t[a].end-t[a].start,
+			JSON_STR + t[a].start);
+			printf("%.*s \n", t[a+1].end-t[a+1].start,
+			JSON_STR + t[a+1].start);
+			a+=2;
+
+			while(a+1<b){
+				printf("        [%.*s]    ", t[a].end-t[a].start,
+				JSON_STR + t[a].start);
+
+				printf("%.*s \n", t[a+1].end-t[a+1].start,
+				JSON_STR + t[a+1].start);
+			a+=2;
+		}
+	}
+		else{
+			printf("Out of bound the Value !! please Enter num again \n ");
+		}
+	}
+}
+void objectNameList(char *JSON_STR,jsmntok_t *t,int tokcount, int *objectCount ,int *nameTokIndex){
+//object의 첫번쨰 네임이 무엇인지 알기위해서
+//int firstString;
+
+	int a = nameTokIndex[1];
+
+	int count =1;
+ 	for(int i=1; i<tokcount;i++){
+	 	if(jsoneq(JSON_STR, &t[i], &t[a]) == 0){
+	 	objectCount[count]=i;
+	 	i++; count ++;
+ 	}
+ }
+}
+void PrintObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount){
+	int count =1;
+	int a;
+	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
+printf("* * * * * OBJECT LIST * * * * * \n");
+	for(;;i++){
+		a = objectCount[i];
+		if(a ==0) break;
+		printf("[NAME %d]: %.*s\n", count, t[a+1].end-t[a+1].start,
+		JSON_STR + t[a+1].start);
+		count++;
 	}
 }
 //name의 특징!
@@ -111,6 +165,7 @@ char *readJSONFile() {
 int main() {
 	int i;
 	int r;
+	int objectCount[100]={0};
 	int nameTokIndexa[100]= {0};
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
@@ -122,8 +177,11 @@ int main() {
 	r = jsmn_parse(&p, JSON_STR, strlen(JSON_STR), t, sizeof(t)/sizeof(t[0]));
 
 	jsonNameList(JSON_STR, t, r, nameTokIndexa);
-	//printNameList(JSON_STR,t, nameTokIndexa);
-	selectNameList(JSON_STR,t,nameTokIndexa);
+//	printNameList(JSON_STR,t, nameTokIndexa);
+//	selectNameList(JSON_STR,t,nameTokIndexa);
+	objectNameList(JSON_STR, t, r, objectCount,nameTokIndexa);
+	PrintObjectList(JSON_STR,t, objectCount);
+	//selectObjectList(JSON_STR,t,objectCount,r);
 	return 0;
 
 	#ifdef DEBUG_MODE
@@ -144,40 +202,5 @@ int main() {
 		return 1;
 	}
 
-	/* Loop over all keys of the root object */
-	for (i = 1; i < r; i++) {
-		if (jsoneq(JSON_STR, &t[i], "name") == 0) {
-			/* We may use strndup() to fetch string value */
-			printf("- name: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STR + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STR, &t[i], "keywords") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
-			printf("- keywords: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STR + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STR, &t[i], "description") == 0) {
-			/* We may want to do strtol() here to get numeric value */
-			printf("- UID: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STR + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STR, &t[i], "example") == 0) {
-			int j;
-			printf("- example:\n");
-			if (t[i+1].type != JSMN_ARRAY) {
-				continue; /* We expect groups to be an array of strings */
-			}
-			for (j = 0; j < t[i+1].size; j++) {
-				jsmntok_t *g = &t[i+j+2];
-				printf("  * %.*s\n", g->end - g->start, JSON_STR + g->start);
-			}
-			i += t[i+1].size + 1;
-		}
-
-		/*else {
-			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
-					JSON_STR + t[i].start);
-		}*/
-	}
 	return EXIT_SUCCESS;
 }
