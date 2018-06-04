@@ -216,8 +216,13 @@ printf("* * * * * OBJECT LIST * * * * * \n");
 }*/
 
 //name의 패런트가 같은 얘들 == 깊이가 같은 ;
-char *readJSONFile() {
-	FILE *fp = fopen("data3.json","r");
+char *readJSONFile(char *fileName) {
+	strcat(fileName,".json");
+	FILE *fp = fopen(fileName,"r");
+	if(fp ==NULL){
+		printf("%s 파일이 존재하지 않습니다. \n",fileName);
+		exit(0);
+	}
 	int count=0;
 	char *JSON_STRING;
 	char joneLine[255];
@@ -242,10 +247,12 @@ int main() {
 	int nameTokIndexa[100]= {0};
 	jsmn_parser p;
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
-
+	char fileName[15];
+	printf("원하는 파일명 입력 : ");
+	scanf("%s",fileName);
 	char *JSON_STR;
 
-	JSON_STR = readJSONFile();
+	JSON_STR = readJSONFile(fileName);
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STR, strlen(JSON_STR), t, sizeof(t)/sizeof(t[0]));
 
