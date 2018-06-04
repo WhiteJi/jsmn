@@ -8,7 +8,9 @@
  * tokens is predictable.
  */
 //#define DEBUG_MODE
-
+int objectCount =0;
+int arrayCount =0;
+int arrayCount2=0;
 static const char *JSON_STRING =
 	"{\"user\": \"johndoe\", \"admin\": false, \"uid\": 1000,\n  "
 	"\"groups\": [\"users\", \"wheel\", \"audio\", \"video\"]}";
@@ -25,23 +27,60 @@ void jsonNameList(char *JSON_STR,jsmntok_t *t, int tokcount,int *nameTokIndex){
 	int count =1;
 	int num=0;
 
- for(int i=1; i<tokcount;i++){
-	 if(t[i].size>=1 && t[i].type ==3){
-	 nameTokIndex[count]=i;
-	 count ++;
-	 break;
+		if((t[0].type==JSMN_OBJECT && t[1].type ==JSMN_STRING)
+		|| (t[0].type==JSMN_ARRAY && t[1].type ==JSMN_OBJECT))
+		objectCount++; //첫시작이 오브젝트이고 다음이 스트링이면. 첫시작이 어레이 이나 다음이 오브젝트이면.
+		if((t[0].type==JSMN_ARRAY && t[1].type ==JSMN_STRING)
+		|| (t[0].type==JSMN_OBJECT && t[1].type ==JSMN_ARRAY))
+			arrayCount++;//첫시작이 어레이이고 다음이 바로 스트링이면. 첫시작이 오브젝트이나 바로 다음이 어레이 이면.)
+
+if(objectCount==1){ //첫 시작이 오브젝트일때
+	 for(int i=0; i<tokcount;i++){
+		 if(t[i].type ==JSMN_STRING && t[i+1].type !=JSMN_STRING)
+		 continue; //다음에 문자열이 아닌 '['이 온 경우 -> real 네임을 찾기위함 (Ramen 거르 .)
+	 	if(t[i].size>=1 && t[i].type ==JSMN_STRING){
+	 	nameTokIndex[count]=i;
+	 	count ++;
+	 	break;
+ 		}
  	}
- }
-int a= nameTokIndex[1];
-//printf("%d\n",a);
-    for(int i=a+1;i<tokcount;i++){
-			if(t[a].parent==t[i].parent && t[i].size>=1){
-				nameTokIndex[count]=i;
-				count++;
+		int a= nameTokIndex[1]; //
+		if(t[a-2].type==JSMN_ARRAY){ //만약 첫 네임이 객체에 속하나. 전체로는 배열에 포함되어있다면!
+			arrayCount2=1;
+			for(int i=a+1;i<tokcount;i++){ //모든 객체의 네임을 뽑아준다.
+				if(t[i].size>=1 && t[i].type ==JSMN_STRING){
+					nameTokIndex[count]=i;
+					count++;
+				}
 			}
 		}
+		else{ //일반 객체인 경우
+    	for(int i=a+1;i<tokcount;i++){ //같은패런트를 네임으로 저장한다.
+				if((t[a].parent == t[i].parent &&t[i].size>=1&& t[i].type ==JSMN_STRING)){
+					nameTokIndex[count]=i;
+					count++;
+				}
+			}
+		}
+	}
+else if(arrayCount==1){ //바로 배열에 속한경우
+	 	for(int i=0; i<tokcount;i++){
+		 	if(t[i].size>=1 && t[i].type ==JSMN_STRING){
+		 	nameTokIndex[count]=i;
+		 	count ++;
+		 	break;
+	 		}
+	 	}
+			int a= nameTokIndex[1];
+	//printf("%d\n",a);
+	    	for(int i=a+1;i<tokcount;i++){
+					if(t[i].size>=1 && t[i].type ==JSMN_STRING){
+						nameTokIndex[count]=i;
+						count++;
+					}
+				}
+			}
 }
-
 void printNameList(char *JSON_STR, jsmntok_t *t,int *nameTokIndex){
 	int a;
 	int i = 1;  //0부터 시작하면 0을 제외시키고 nameTokIndex에 넣었기때문에 시작에 0으로 초기화해준값이 되므로 바로 중지됨
@@ -72,6 +111,9 @@ void selectNameList(char *JSON_STR , jsmntok_t *t , int *nameTokIndex){
 
 		printf("%.*s \n", t[a+1].end-t[a+1].start,
 		JSON_STR + t[a+1].start);
+
+
+
 	}
 		else{ printf("Out of bound the Value !! please Enter num again \n ");
 		}
@@ -117,19 +159,29 @@ int number=0;
 void objectNameList(char *JSON_STR,jsmntok_t *t,int tokcount, int *objectCount ,int *nameTokIndex){
 //object의 첫번쨰 네임이 무엇인지 알기위해서
 //int firstString;
-
 	int a = nameTokIndex[1];
-
+if(arrayCount ==1 || arrayCount2==1){
+	int count =1;
+	for(int i=1; i<tokcount;i++){
+		if(jsoneq(JSON_STR, &t[i], &t[a]) == 0){
+		objectCount[count]=i;
+		i++;
+		count ++;
+	}
+}
+}
+else {
 	int count =1;
  	for(int i=1; i<tokcount;i++){
-	 	if(t[a].parent == t[i].parent && jsoneq(JSON_STR, &t[i], &	t[a]) == 0){
+	 	if(t[a].parent == t[i].parent && jsoneq(JSON_STR, &t[i], &t[a]) == 0){
 	 	objectCount[count]=i;
 	 	i++;
 		count ++;
  	}
  }
-// printf("%d\n ", objectCount[1]);
- //printf("%d\n ", objectCount[2]);
+}
+//printf("%d\n ", objectCount[1]);
+//printf("%d\n ", objectCount[2]);
 //  printf("%d\n ", objectCount[3]);
 }
 void PrintObjectList(char *JSON_STR, jsmntok_t *t,int *objectCount){
@@ -165,7 +217,7 @@ printf("* * * * * OBJECT LIST * * * * * \n");
 
 //name의 패런트가 같은 얘들 == 깊이가 같은 ;
 char *readJSONFile() {
-	FILE *fp = fopen("data2.json","r");
+	FILE *fp = fopen("data3.json","r");
 	int count=0;
 	char *JSON_STRING;
 	char joneLine[255];
@@ -192,8 +244,8 @@ int main() {
 	jsmntok_t t[128]; /* We expect no more than 128 tokens */
 
 	char *JSON_STR;
-	JSON_STR = readJSONFile();
 
+	JSON_STR = readJSONFile();
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STR, strlen(JSON_STR), t, sizeof(t)/sizeof(t[0]));
 
@@ -202,7 +254,7 @@ int main() {
 //	selectNameList(JSON_STR,t,nameTokIndexa);
 	objectNameList(JSON_STR, t, r, objectCount,nameTokIndexa);
 	PrintObjectList(JSON_STR,t, objectCount);
-	PrintByName(JSON_STR,t,nameTokIndexa);
+	PrintByName(JSON_STR,t,nameTokIndexa);//select
 	return 0;
 
 	#ifdef DEBUG_MODE
