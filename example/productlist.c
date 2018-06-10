@@ -77,14 +77,16 @@ int nameindex;
 int companyindex;
 int priceindex;
 int countindex;
+int totalprice;
 char company[]="company";
 char name[]="name";
 char count[]="count";
 char price []="price";
-
-printf("\t****************************************\n");
-printf("\t번호\t제품명\t제조사\t가격\t개수\n");
-printf("\t****************************************\n");
+char s[100]; //for Total Price
+char s2[30];
+printf("\t*********************************************\n");
+printf("\t번호\t제품명\t제조사\t가격\t개수\t총가격\n");
+printf("\t*********************************************\n");
 
 	for(int i=1;i<5;i++){
 		nameindex= returnTokindex(JSON_STR,t,nameCount,nameTokenInfo,name,i);
@@ -92,11 +94,22 @@ printf("\t****************************************\n");
 		priceindex=returnTokindex(JSON_STR,t,nameCount,nameTokenInfo,price,i);
 		countindex=returnTokindex(JSON_STR,t,nameCount,nameTokenInfo,count,i);
 
-		printf("%10d \t%.*s\t%.*s\t%.*s\t%.*s\n",i,
+		 // atoi(t[countindex+1].end-t[countindex+1].start,JSON_STR + t[countindex+1].start);
+		 ///TOTAL PRICE 구하기 ->>
+
+	  strncpy(s, JSON_STR + t[priceindex+1].start,t[nameindex+1].end-t[nameindex+1].start);
+		int j= strlen(s);
+		s[j]='\0';
+		strncpy(s2,JSON_STR + t[countindex+1].start ,t[countindex+1].end-t[countindex+1].start );
+		int k= strlen(s2);
+		s2[k]='\0';
+ 		totalprice=atoi(s)*atoi(s2);
+
+		printf("%10d \t%.*s\t%.*s\t%.*s\t%.*s\t%d\n",i,
 		t[nameindex+1].end-t[nameindex+1].start,	JSON_STR + t[nameindex+1].start,
 		t[companyindex+1].end-t[companyindex+1].start,	JSON_STR + t[companyindex+1].start,
 		t[priceindex+1].end-t[priceindex+1].start,	JSON_STR + t[priceindex+1].start,
-		t[countindex+1].end-t[countindex+1].start,	JSON_STR + t[countindex+1].start);
+		t[countindex+1].end-t[countindex+1].start,	JSON_STR + t[countindex+1].start, totalprice);
 	}
 }
 
